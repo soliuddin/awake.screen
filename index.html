@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Strict policy: only this site's own files may load. No inline code, no network, no frames, no forms. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#070812">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Stay Awake">
+  <meta name="description" content="One button that keeps your screen awake until you turn it off.">
+  <title>Stay Awake</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main id="app" data-on="false">
+    <div id="stage" class="stage">
+      <canvas id="fx" class="fx" aria-hidden="true"></canvas>
+      <button id="power" class="power" type="button" aria-pressed="false" aria-label="Keep screen awake">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <path d="M12 3v8"/><path d="M6.3 6.6a8 8 0 1 0 11.4 0"/>
+        </svg>
+      </button>
+    </div>
+    <div id="timer" class="timer" hidden>00:00:00</div>
+    <p id="note" class="note" role="status" aria-live="polite">Screen can sleep.</p>
+    <noscript><p class="note err">Stay Awake needs JavaScript to hold the screen on.</p></noscript>
+  </main>
+  <button id="float" class="float" type="button" hidden>Float window</button>
+</body>
+</html>

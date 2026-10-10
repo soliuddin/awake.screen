@@ -1,0 +1,202 @@
+/* Layout: one glass orb centred on a canvas that draws the light show around it.
+   --h is the live hue (0-360). The script changes it every frame while the screen is held awake. */
+:root {
+  --h: 28;
+  --bg: #070812;
+  --ink: #e8ebff;
+  --muted: #7d84a6;
+  --line: #262a4f;
+  --err: #ff9b85;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-num: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding-inline: 16px;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  background: radial-gradient(90% 70% at 50% 42%, hsl(var(--h) 55% 11%), transparent 70%), var(--bg);
+  -webkit-tap-highlight-color: transparent;
+}
+body:has(.mini) { padding: 0; }
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+/* ---------- stage ---------- */
+.stage {
+  position: relative;
+  width: min(86vw, 26rem, 62vh);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+.fx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---------- the button ---------- */
+.power {
+  position: relative;
+  width: 44%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: #3a0710;
+  background: radial-gradient(circle at 50% 24%, #ff6262, #e03048 58%, #b01a32);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 130, 130, 0.85),
+    inset 0 -14px 24px rgba(90, 8, 24, 0.5),
+    0 0 30px rgba(255, 60, 70, 0.4);
+  transition: color 0.4s ease, box-shadow 0.5s ease, transform 0.15s ease;
+}
+.power svg {
+  position: relative;
+  z-index: 1;
+  width: 38%;
+  height: 38%;
+  transition: filter 0.4s ease;
+}
+
+/* vivid colour layer, fades in when the screen is held awake */
+.power::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 118%, hsl(calc(var(--h) + 70) 100% 62%) 0, transparent 58%),
+    radial-gradient(circle at 50% 20%, hsl(var(--h) 100% 66%), hsl(var(--h) 100% 52%) 55%, hsl(calc(var(--h) + 38) 100% 40%));
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+/* spinning rainbow rim */
+.power::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  padding: 3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    hsl(var(--h) 100% 66%),
+    hsl(calc(var(--h) + 90) 100% 66%),
+    hsl(calc(var(--h) + 180) 100% 66%),
+    hsl(calc(var(--h) + 270) 100% 66%),
+    hsl(var(--h) 100% 66%)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.power:hover { transform: scale(1.03); }
+.power:active { transform: scale(0.95); }
+.power:focus-visible { outline: 3px solid hsl(var(--h) 100% 70%); outline-offset: 8px; }
+
+main[data-on="true"] .power {
+  color: hsl(var(--h) 100% 9%);
+  box-shadow:
+    inset 0 0 0 2px hsl(calc(var(--h) + 20) 100% 76% / 0.9),
+    inset 0 -14px 24px hsl(calc(var(--h) + 50) 100% 28% / 0.5),
+    0 0 36px hsl(var(--h) 100% 55% / 0.5);
+  animation: breathe 3.4s ease-in-out infinite;
+}
+main[data-on="true"] .power::before { opacity: 1; }
+main[data-on="true"] .power::after { opacity: 1; animation: turn 6s linear infinite; }
+main[data-on="true"] .power svg { filter: drop-shadow(0 0 7px hsl(var(--h) 100% 85% / 0.7)); }
+
+@keyframes breathe { 50% { transform: scale(1.025); } }
+@keyframes turn { to { transform: rotate(360deg); } }
+
+/* ---------- text ---------- */
+.timer {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9375rem;
+  letter-spacing: 0.1em;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--h) 70% 45% / 0.55);
+  color: hsl(var(--h) 85% 78%);
+}
+.timer[hidden] { display: none; }
+
+/* status text is for screen readers; it becomes visible only for errors */
+.note {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.note.err {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  clip-path: none;
+  white-space: normal;
+  max-width: 32ch;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--err);
+  text-wrap: balance;
+}
+
+/* ---------- floating-window launcher ---------- */
+.float {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.float:hover { color: var(--ink); border-color: var(--muted); }
+.float:focus-visible { outline: 3px solid hsl(var(--h) 100% 70%); outline-offset: 3px; }
+.float[hidden] { display: none; }
+
+/* hidden video used only by the fallback keep-awake path */
+.keep { position: fixed; left: 0; top: 0; width: 2px; height: 2px; opacity: 0.01; pointer-events: none; }
+
+/* inside the small floating window: only the orb */
+.mini { gap: 0; }
+.mini .stage { width: min(100vw, 100vh); }
+.mini .timer, .mini .note { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
